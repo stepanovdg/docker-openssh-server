@@ -1,35 +1,39 @@
-# syntax=docker/dockerfile:1
-
-FROM ghcr.io/linuxserver/baseimage-alpine:3.17
+FROM ghcr.io/linuxserver/baseimage-ubuntu:jammy-version-f70266cb
 
 # set version label
 ARG BUILD_DATE
 ARG VERSION
-ARG OPENSSH_RELEASE
 LABEL build_version="Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}"
 LABEL maintainer="aptalca"
-
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 RUN \
-  echo "**** install runtime packages ****" && \
-  apk add --no-cache --upgrade \
+  apt-get update && \
+  apt-get install -y --no-install-recommends \
+    at \
+    zip \
+    unzip \
+    openssh-server \
+    openssh-client \
+    openssh-sftp-server \
     logrotate \
     nano \
     netcat-openbsd \
-    sudo && \
-  echo "**** install openssh-server ****" && \
-  if [ -z ${OPENSSH_RELEASE+x} ]; then \
-    OPENSSH_RELEASE=$(curl -sL "http://dl-cdn.alpinelinux.org/alpine/v3.17/main/x86_64/APKINDEX.tar.gz" | tar -xz -C /tmp && \
-    awk '/^P:openssh-server-pam$/,/V:/' /tmp/APKINDEX | sed -n 2p | sed 's/^V://'); \
-  fi && \
-  apk add --no-cache \
-    openssh-client==${OPENSSH_RELEASE} \
-    openssh-server-pam==${OPENSSH_RELEASE} \
-    openssh-sftp-server==${OPENSSH_RELEASE} && \
-  echo "**** setup openssh environment ****" && \
+    sudo \
+    libfontconfig1 \
+    libfreetype6 \
+    libssl3 && \
+  echo "**** cleanup ****" && \
   sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config && \
-  usermod --shell /bin/bash abc && \
+  export SDKMAN_DIR="/usr/local/sdkman" && \
+  curl -s "https://get.sdkman.io" | bash && \
+  source "/usr/local/sdkman/bin/sdkman-init.sh" && \
+  echo 'export SDKMAN_DIR="/usr/local/sdkman" && source "/usr/local/sdkman/bin/sdkman-init.sh"' >> /etc/profile && \
+  sdk install java 20-amzn && \
   rm -rf \
-    /tmp/*
+    /tmp/* \
+    /var/lib/apt/lists/* \
+    /var/tmp/*
+
 
 # add local files
 COPY /root /

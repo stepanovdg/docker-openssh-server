@@ -128,3 +128,9 @@ chmod 700 \
     /config/.ssh
 chmod 600 \
     /config/.ssh/authorized_keys
+    
+touch /var/log/lastlog
+#utmp /var/log/lastlog
+chmod 664 /var/log/lastlog
+
+#echo "AllowUsers $USER_NAME root" >> /etc/ssh/sshd_config

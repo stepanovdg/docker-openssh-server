@@ -11,8 +11,11 @@ if [[ "$USER_NAME" != "abc" ]]; then
     groupmod -n "$USER_NAME" abc
 fi
 
+groupmod -g 1000 users
 groupmod -o -g "$PGID" "$USER_NAME"
 usermod -o -u "$PUID" "$USER_NAME"
+usermod --shell /bin/bash "$USER_NAME"
+echo +:$USER_NAME:ALL >> /etc/security/access.conf
 
 cat /etc/s6-overlay/s6-rc.d/init-adduser/branding
 
